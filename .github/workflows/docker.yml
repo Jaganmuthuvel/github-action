@@ -1,0 +1,36 @@
+name: Docker CI/CD Pipeline
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  ci:
+    runs-on: self-hosted
+
+    steps:
+      - name: Pull Latest Code
+        run: |
+          cd /home/ubuntu/github-action-ci-cd
+          git pull origin master
+
+      - name: Build Docker Image
+        run: |
+          cd /home/ubuntu/github-action-ci-cd
+          docker build -t github-action-ci-cd .
+
+      - name: Run Tests
+        run: |
+          cd /home/ubuntu/github-action-ci-cd
+          docker run --rm github-action-ci-cd npm run test
+
+  cd:
+    needs: ci
+    runs-on: self-hosted
+
+    steps:
+      - name: Restart App
+        run: |
+          docker stop backend-prod || true
+          docker rm backend-prod || true
+          docker run -d --name backend-prod -p 3000:3000 github-action-ci-cd

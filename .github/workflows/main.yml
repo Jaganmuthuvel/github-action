@@ -1,0 +1,33 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  ci:
+    runs-on: self-hosted
+
+    steps:
+      - name: Pull Latest Code
+        run: |
+          cd /home/ubuntu/github-action-ci-cd
+          git pull origin master
+
+      - name: Install Dependencies
+        run: |
+          cd /home/ubuntu/github-action-ci-cd
+          npm i
+
+      - name: Run Tests
+        run: |
+          cd /home/ubuntu/github-action-ci-cd
+          npm run test
+
+  cd:
+    needs: ci
+    runs-on: self-hosted
+
+    steps:
+      - name: Restart App
+        run: pm2 restart backend-prod
