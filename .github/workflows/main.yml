@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [master]
+    branches: [main]
 
 jobs:
   ci:
@@ -11,17 +11,17 @@ jobs:
     steps:
       - name: Pull Latest Code
         run: |
-          cd /home/ubuntu/github-action-ci-cd
-          git pull origin master
+          cd /home/ubuntu/github-action
+          git pull origin main
 
       - name: Install Dependencies
         run: |
-          cd /home/ubuntu/github-action-ci-cd
+          cd /home/ubuntu/github-action
           npm i
 
       - name: Run Tests
         run: |
-          cd /home/ubuntu/github-action-ci-cd
+          cd /home/ubuntu/github-action
           npm run test
 
   cd:
