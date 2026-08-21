@@ -5,7 +5,7 @@ pipeline {
         }
     }
     environment {
-        DOCKER_IMAGE = "jagan2810/Jenkins-nodejs-app"
+        DOCKER_IMAGE = "jagan2810/jenkins-nodejs-app"
         DOCKER_TAG = "${BUILD_NUMBER}"
         DOCKER_CRED_ID = "Docker-credentials"
     }
