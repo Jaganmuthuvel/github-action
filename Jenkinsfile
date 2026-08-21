@@ -1,16 +1,18 @@
 pipeline {
     agent {
         node {
-            label "Agent-node-1"
+            label 'Agent-node-1'
         }
     }
     environment {
-        DOCKER_IMAGE = "jagan2810/jenkins-nodejs-app"
+        DOCKER_IMAGE = 'jagan2810/jenkins-nodejs-app'
         DOCKER_TAG = "${BUILD_NUMBER}"
-        DOCKER_CRED_ID = "Docker-credentials"
+        DOCKER_CRED_ID = 'Docker-credentials'
+        APPLICATION_CRED_ID = 'application-server-cred'
+        Application_IP_ID = "application-private-ip"
     }
     stages {
-        stage("Build Info") {
+        stage('Build Info') {
             steps {
                 sh """
                 echo "Build started"
@@ -18,20 +20,20 @@ pipeline {
                 """
             }
         }
-        
-        stage("Install Dependencies") {
+
+        stage('Install Dependencies') {
             steps {
-                sh "npm install"
+                sh 'npm install'
             }
         }
-        
-        stage("Run Test Case") {
+
+        stage('Run Test Case') {
             steps {
-                sh "npm test"
+                sh 'npm test'
             }
         }
-        
-        stage("Docker Build") {
+
+        stage('Docker Build') {
             steps {
                 sh """
                 echo "Docker image is building...."
@@ -40,8 +42,8 @@ pipeline {
                 """
             }
         }
-        
-        stage("Docker Image Push") {
+
+        stage('Docker Image Push') {
             steps {
                 withCredentials([usernamePassword(credentialsId: "${DOCKER_CRED_ID}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh """
@@ -53,12 +55,33 @@ pipeline {
                 }
             }
         }
+        stage('Deploy to Application Server') {
+    steps {
+        withCredentials([string(credentialsId: "${Application_IP_ID}", variable: 'SERVER_IP')]) {
+            sshagent(["${APPLICATION_CRED_ID}"]) {
+                sh """
+                ssh -o StrictHostKeyChecking=no ubuntu@\$SERVER_IP << 'EOF'
+                    docker pull ${DOCKER_IMAGE}:latest
+
+                    docker stop project-1-app || true
+                    docker rm project-1-app || true
+
+                    docker run -d \\
+                        --name project-1-app \\
+                        -p 3001:3001 \\
+                        ${DOCKER_IMAGE}:latest
+EOF
+                """
+            }
+        }
     }
-    
+}
+    }
+
     post {
         always {
             sh "docker rmi ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest || true"
-            sh "docker logout || true"
+            sh 'docker logout || true'
         }
     }
 }
